@@ -4,8 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.remedialucp2.dao.*
 import com.example.remedialucp2.model.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Database(
     entities = [
@@ -35,9 +39,27 @@ abstract class DatabaseBuku : RoomDatabase() {
                     context.applicationContext,
                     DatabaseBuku::class.java,
                     "database_buku"
-                ).build()
+                )
+                .addCallback(DatabaseCallback(CoroutineScope(Dispatchers.IO)))
+                .build()
                 INSTANCE = instance
                 instance
+            }
+        }
+    }
+
+    private class DatabaseCallback(private val scope: CoroutineScope) : RoomDatabase.Callback() {
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            super.onCreate(db)
+            INSTANCE?.let {
+                scope.launch {
+                    val kategoriDao = it.kategoriDao()
+                    kategoriDao.insertAll(
+                        Kategori(nama = "Fiksi Ilmiah", parentId = null),
+                        Kategori(nama = "Pemrograman", parentId = null),
+                        Kategori(nama = "Sejarah", parentId = null)
+                    )
+                }
             }
         }
     }

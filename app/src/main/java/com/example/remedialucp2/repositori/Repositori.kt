@@ -16,24 +16,26 @@ class Repositori(private val db: DatabaseBuku) {
             val semuaKategori = kategoriDao.getSemuaSubKategori(kategoriId)
             val kategoriIds = semuaKategori.map { it.id }
 
-            val dipinjam = bukuDao.countBukuDipinjam(kategoriIds)
+            val dipinjam = bukuDao.countBukuDipinjamDiKategori(kategoriIds)
             if (dipinjam > 0) {
                 throw Exception("Rollback: masih ada buku dipinjam")
             }
 
             if (hapusBuku) {
-                bukuDao.softDeleteByKategori(kategoriId)
+                bukuDao.softDeleteByKategoriIds(kategoriIds)
             } else {
-                bukuDao.lepasKategori(kategoriId)
+                bukuDao.lepasKategori(kategoriIds)
             }
 
-            kategoriDao.softDelete(kategoriId)
+            kategoriIds.forEach { id ->
+                kategoriDao.softDelete(id)
+            }
 
             auditLogDao.insert(
                 AuditLog(
                     tableName = "Kategori",
-                    beforeData = "Kategori id=$kategoriId",
-                    afterData = "deleted",
+                    beforeData = "Kategori id=$kategoriId dan semua sub-kategorinya telah diproses.",
+                    afterData = "Semua kategori dan sub-kategori yang relevan ditandai sebagai dihapus.",
                     timestamp = System.currentTimeMillis()
                 )
             )

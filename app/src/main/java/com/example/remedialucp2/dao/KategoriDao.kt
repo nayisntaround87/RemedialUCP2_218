@@ -1,11 +1,20 @@
 package com.example.remedialucp2.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.remedialucp2.model.Kategori
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface KategoriDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(vararg kategori: Kategori)
+
+    @Query("SELECT * FROM Kategori WHERE deleted = 0 ORDER BY nama ASC")
+    fun getSemuaKategori(): Flow<List<Kategori>>
 
     @Query("""
         WITH RECURSIVE sub_kategori(id) AS (

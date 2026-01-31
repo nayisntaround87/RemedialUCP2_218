@@ -18,5 +18,6 @@ data class CopyBuku(
     @PrimaryKey
     val copyId: String,
     val bukuId: Int,
-    val status: String = "Tersedia"
+    val status: String = "Tersedia",
+    val deleted: Boolean = false
 )
